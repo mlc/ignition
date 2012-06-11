@@ -19,7 +19,9 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
 
 import android.content.Context;
+import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
+import android.os.Message;
 import android.widget.ImageView;
 
 import com.github.ignition.support.cache.ImageCache;
@@ -42,13 +44,13 @@ public class RemoteImageLoader {
     private static final int DEFAULT_NUM_RETRIES = 3;
     private static final int DEFAULT_BUFFER_SIZE = 65536;
 
-    private ThreadPoolExecutor executor;
-    private ImageCache imageCache;
-    private int numRetries = DEFAULT_NUM_RETRIES;
-    private int defaultBufferSize = DEFAULT_BUFFER_SIZE;
-    private long expirationInMinutes = DEFAULT_TTL_MINUTES;
+    protected ThreadPoolExecutor executor;
+    protected ImageCache imageCache;
+    protected int numRetries = DEFAULT_NUM_RETRIES;
+    protected int defaultBufferSize = DEFAULT_BUFFER_SIZE;
+    protected long expirationInMinutes = DEFAULT_TTL_MINUTES;
 
-    private Drawable defaultDummyDrawable, errorDrawable;
+    protected Drawable defaultDummyDrawable, errorDrawable;
 
     public RemoteImageLoader(Context context) {
         this(context, true);
@@ -230,8 +232,11 @@ public class RemoteImageLoader {
             // do not go through message passing, handle directly instead
             handler.handleImageLoaded(imageCache.getBitmap(imageUrl), null);
         } else {
-            executor.execute(new RemoteImageLoaderJob(imageUrl, handler, imageCache, numRetries,
-                    defaultBufferSize));
+            executor.execute(constructImageLoaderJob(imageUrl, imageView, handler));
         }
+    }
+
+    protected RemoteImageLoaderJob constructImageLoaderJob(String imageUrl, ImageView imageView, RemoteImageLoaderHandler handler) {
+        return new RemoteImageLoaderJob(imageUrl, handler, imageCache, numRetries, defaultBufferSize);
     }
 }
